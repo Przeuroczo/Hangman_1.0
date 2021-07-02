@@ -13,15 +13,7 @@ namespace Hangman
         static string wrongLetters = "";
         static string goodLetters = " ";
         static string capitalCity = "";
-        // PORZĄDEK W DÓŁ
-        //static string SetCountry()
-        //{
-        //    string line = RandomLineFromFile();
-        //    string[] splitLine = line.Split('|');
-        //    string sourceCountry = splitLine[0];
-        //    string country = sourceCountry.Remove(sourceCountry.Length - 1);
-        //    return country;
-        //}
+        
         static void Exit()
         {
             Console.WriteLine();
