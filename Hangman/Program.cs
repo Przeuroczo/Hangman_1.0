@@ -72,10 +72,11 @@ namespace Hangman
             string correct = Program.capitalCity;
             Console.WriteLine("                 Type phrase:");
             string answer = Console.ReadLine();
-            if (correct == answer.ToLower())
+            if (correct.ToLower() == answer.ToLower())
             {
-                Console.WriteLine("                 " + answer + "is correct! Well done!");
+                Console.WriteLine("                 " + answer + "is correct! Well done!\n");
             }
+            else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("                 " + answer.ToUpper() + " is not correct. U lose 1 life point.\n");
@@ -87,14 +88,19 @@ namespace Hangman
         }
         static void LettersNotInWord()
         {
-            Console.Write("\n                 Letters not-in-phrase: ");
-            int count = 0;
-            while (count < Program.wrongLetters.Length)
+            //debug
+            //Console.WriteLine(Program.wrongLetters.Length);
+            if (Program.wrongLetters.Length > 0)
             {
-                Console.Write(Program.wrongLetters.ToUpper()[count] + ", ");
-                count++;
+                Console.Write("\n                 Letters not-in-phrase: ");
+                int count = 0;
+                while (count < Program.wrongLetters.Length)
+                {
+                    Console.Write(Program.wrongLetters.ToUpper()[count] + ", ");
+                    count++;
+                }
+                Console.WriteLine("");
             }
-            Console.WriteLine("");
         }
         static void CheckLetter()
         {
@@ -104,8 +110,9 @@ namespace Hangman
             char answer = typing[0];
             if (correct.ToLower().Contains(answer))
             {
-                Console.WriteLine("                 Good! " + answer.ToString().ToUpper() + " exist in this phrase.");
+                Console.WriteLine("                 Good! " + answer.ToString().ToUpper() + " exist in this phrase.\n");
                 Program.goodLetters = Program.goodLetters + answer.ToString();
+                ShowLife();
                 DrawRebus();
             }
             else
@@ -151,6 +158,8 @@ namespace Hangman
             string phrase = Program.capitalCity;
             int count = 0;
             Console.WriteLine("\n                 Phrase to guess:\n");
+            //debug:
+            //Console.WriteLine(phrase);
             Console.Write("                 ");
             string phraseL = phrase.ToLower();
             string goodLetters = Program.goodLetters.ToLower();
@@ -226,6 +235,32 @@ namespace Hangman
             }
             return line;
         }
+        static void Menu()
+        {
+            string start;
+            string startLower = "x";
+            string yes = "y";
+            string no = "n";
+            while (true)
+            {
+                start = Console.ReadLine();
+                startLower = start.ToLower();
+                if (startLower == yes)
+                {
+                    Manual();
+                    Game();
+                }
+                else if (startLower == no)
+                {
+                    Exit();
+                }
+                else
+                {
+                    Console.WriteLine("                 Type 'Y' to start or 'N' to exit ");
+                    Menu();
+                }
+            }
+        }
         static void Main(string[] args)
         {   
             Console.WriteLine();
@@ -237,33 +272,8 @@ namespace Hangman
             Console.WriteLine("     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝");
             Console.WriteLine();
             Console.WriteLine();
-            string start;
-            string startLower = "x";
-            string yes = "y";
-            string no = "n";
             Console.WriteLine("                 Start the game?     (Y/N)");
-            while (true)
-            {
-                start = Console.ReadLine();
-                startLower = start.ToLower();
-                if (startLower == yes)
-                {
-                    Manual();
-                    Game();
-                    //LetterOrPhrase();
-
-
-                }
-                else if (startLower == no)
-                {
-                    Exit();
-                }
-                else
-                {
-                    Console.WriteLine("                 Type 'Y' to start or 'N' to exit ");
-                    Console.ReadKey();
-                }
-            }
+            Menu();
         }
     }
 }
