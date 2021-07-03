@@ -254,7 +254,8 @@ namespace Hangman
             Program.lifePoints = 5;
             Program.guessingCount = 0;
             SetData();
-            Console.WriteLine(Program.capitalCity);
+            //debug
+            //Console.WriteLine(Program.capitalCity);
             ShowLife();
             DrawRebus();
         }
