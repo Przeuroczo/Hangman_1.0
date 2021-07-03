@@ -11,17 +11,11 @@ namespace Hangman
     {
         static int lifePoints = 0;
         static string wrongLetters = "";
-        static string goodLetters = " ";
+        static string goodLetters = "";
         static string capitalCity = "";
-        // PORZĄDEK W DÓŁ
-        //static string SetCountry()
-        //{
-        //    string line = RandomLineFromFile();
-        //    string[] splitLine = line.Split('|');
-        //    string sourceCountry = splitLine[0];
-        //    string country = sourceCountry.Remove(sourceCountry.Length - 1);
-        //    return country;
-        //}
+        static string country = "";
+        static string playersAnswer = "";
+        static int guessingCount = 0;
         static void Exit()
         {
             Console.WriteLine();
@@ -34,13 +28,67 @@ namespace Hangman
             System.Threading.Thread.Sleep(1000);
             Environment.Exit(0);
         }
+        static void CheckIfPlayerGuessedWord ()
+        {
+            string phrase = Program.capitalCity;
+            string word = "";
+            int count = 0;
+            string phraseL = phrase.ToLower();
+            string goodLetters = Program.goodLetters.ToLower();
+            while (count < phrase.Length)
+            {
+                char space = ' ';
+                if (phrase[count] == space)
+                {
+                    word = word + " ";
+                    count++;
+                }
+                else if (goodLetters.Contains(phraseL[count]))
+                {
+                    word = word + phraseL[count].ToString().ToUpper();
+                    count++;
 
+                }
+                else
+                {
+                    word = word + "*";
+                    count++;
+
+                }
+            }
+            Console.WriteLine();
+            Program.playersAnswer = word;
+            //debug
+            //Console.WriteLine(word);
+        }
         static void IfGameEnds()
         {
+            CheckIfPlayerGuessedWord();
+            //debug
+            //Console.WriteLine("Lives: " + Program.lifePoints);
+            //Console.WriteLine("Correct answer: " + Program.capitalCity.ToLower());
+            //Console.WriteLine("Users answer: " + Program.playersAnswer.ToLower());
             if (Program.lifePoints == 0)
+            // End of game if pleyer lost all life points.
             {
-                Console.WriteLine("\nGame Over");
-                Console.WriteLine("the answer: " + Program.capitalCity);
+                Console.WriteLine("\n                 Game Over");
+                Console.WriteLine("                 The answer was: " + Program.capitalCity + "\n");
+                //restarting guessing memory
+                Program.goodLetters = "";
+                Program.wrongLetters = "";
+                Console.WriteLine("                 Would you like to play again?     (Y/N)");
+                Menu();
+            }
+            // End of game if player guessed phrase.
+            else if (Program.capitalCity.ToLower() == Program.playersAnswer.ToLower())
+            {
+                Console.WriteLine("                 " + Program.playersAnswer.ToUpper() + " is correct! Well done!\n");
+                Console.WriteLine("                 You reached correct capital's name after " + Program.guessingCount + " rounds." );
+                //restarting guessing memory
+                Program.goodLetters = "";
+                Program.wrongLetters = "";
+                Console.WriteLine("                 Would you like to play again?     (Y/N)");
+                Menu();
             }
             else
             {
@@ -66,6 +114,11 @@ namespace Hangman
             {
                 LettersNotInWord();
             }
+            if (lifePoints == 1)
+            {
+                
+                Console.WriteLine("                 hint!: This is the capital of " + Program.country);
+            }
         }
         static void CheckPhrase()
         {
@@ -74,14 +127,18 @@ namespace Hangman
             string answer = Console.ReadLine();
             if (correct.ToLower() == answer.ToLower())
             {
-                Console.WriteLine("                 " + answer + "is correct! Well done!\n");
+                //Console.WriteLine("                 " + answer + " is correct! Well done!\n");
+                Program.goodLetters = answer.ToLower();
+                Program.guessingCount++;
+                IfGameEnds();
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("                 " + answer.ToUpper() + " is not correct. U lose 1 life point.\n");
+                Console.WriteLine("                 " + answer.ToUpper() + " is not correct. U lose 2 life points.\n");
                 Console.ResetColor();
-                Program.lifePoints--;
+                Program.lifePoints = Program.lifePoints - 2;
+                Program.guessingCount++;
                 ShowLife();
                 IfGameEnds();
             }
@@ -112,8 +169,9 @@ namespace Hangman
             {
                 Console.WriteLine("                 Good! " + answer.ToString().ToUpper() + " exist in this phrase.\n");
                 Program.goodLetters = Program.goodLetters + answer.ToString();
+                Program.guessingCount++;
+                IfGameEnds(); 
                 ShowLife();
-                DrawRebus();
             }
             else
             {
@@ -122,6 +180,7 @@ namespace Hangman
                 Console.ResetColor();
                 Program.lifePoints--;
                 Program.wrongLetters = Program.wrongLetters + answer.ToString();
+                Program.guessingCount++;
                 ShowLife();
                 IfGameEnds();
             }
@@ -145,13 +204,16 @@ namespace Hangman
                 LetterOrPhrase();
             }
         }
-        static void SetCapital()
+        static void SetData()
         {
             string line = RandomLineFromFile();
             string[] splitLine = line.Split('|');
             string sourceCapital = splitLine[1];
             string capital = sourceCapital.Substring(1);
             Program.capitalCity = capital;
+            string sourceCountry = splitLine[0];
+            string country = sourceCountry.Remove(sourceCountry.Length - 1);
+            Program.country = country;
         }
         static void DrawRebus()
         {
@@ -175,11 +237,13 @@ namespace Hangman
                 {
                     Console.Write(phraseL[count].ToString().ToUpper() + " ");
                     count++;
+
                 }
                 else
                 {
                     Console.Write("_ ");
                     count++;
+
                 }
             }
             Console.WriteLine();
@@ -188,7 +252,9 @@ namespace Hangman
         static void Game()
         {
             Program.lifePoints = 5;
-            SetCapital();
+            Program.guessingCount = 0;
+            SetData();
+            Console.WriteLine(Program.capitalCity);
             ShowLife();
             DrawRebus();
         }
