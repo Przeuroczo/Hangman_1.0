@@ -9,6 +9,11 @@ namespace Hangman
 {
     class Program
     {
+        static string ScoresPath()
+        {
+            string dataSourcePath = @"all_scores.txt";
+            return dataSourcePath;
+        }
         static int lifePoints = 0;
         static string wrongLetters = "";
         static string goodLetters = "";
@@ -16,6 +21,90 @@ namespace Hangman
         static string country = "";
         static string playersAnswer = "";
         static int guessingCount = 0;
+        static DateTime start;
+        static DateTime end;
+        static void WallOfFame ()
+        {
+            Console.WriteLine("\n                 Bests of the bests:\n");
+            int lineCounter = 0;
+            string line;
+            string dataSourcePath = ScoresPath();
+            System.IO.StreamReader file = new System.IO.StreamReader(dataSourcePath);
+            while ((line = file.ReadLine()) != null)
+            {
+                lineCounter++;
+            }
+            //Console.WriteLine(lineCounter);
+            int numberOfBestScores = 10;
+            if (numberOfBestScores > lineCounter)
+            {
+                numberOfBestScores = lineCounter;
+            }
+            DateTime[] time = new DateTime[lineCounter];
+            int j = 0;
+            string[] splitLine = new string[5];
+            TimeSpan[] allTimes = new TimeSpan[lineCounter];
+            string line2;
+            System.IO.StreamReader file2 = new System.IO.StreamReader(dataSourcePath);
+            while ((line2 = file2.ReadLine()) != null)
+            {
+                splitLine = line2.Split('|');
+                string[] txtTime = splitLine[2].Split(':', '.');
+                int[] timeS = { Int32.Parse(txtTime[0]), Int32.Parse(txtTime[1]), Int32.Parse(txtTime[2]) };
+                TimeSpan ts = new TimeSpan(0, 0, timeS[0], timeS[1], timeS[2]);
+                allTimes[j] = ts;
+                //Console.WriteLine(ts);
+                //Array.Clear(splitLine, 0, splitLine.Length);
+                //Console.WriteLine(time[j]);
+                j++;
+            }
+            int i = 0;
+            //Console.WriteLine(numberOfBestScores);
+            while (i < numberOfBestScores)
+            {
+                TimeSpan minTime = allTimes.Min();
+                //Console.WriteLine(minTime);
+                int position = Array.IndexOf(allTimes, minTime);
+                string line3;
+                int k = 0;
+                System.IO.StreamReader file3 = new System.IO.StreamReader(dataSourcePath);
+                while ((line3 = file3.ReadLine()) != null)
+                {
+                    if (k == position)
+                    {
+                        int scoreNumber = k + 1;
+                        Console.WriteLine("                 " + scoreNumber + ": " + line3);
+                        k++;
+                    }
+                    else
+                    {
+                        k++;
+                    }
+                }
+                allTimes[position] = TimeSpan.MaxValue;
+                i++;
+            }
+            Console.ReadKey();
+
+        }
+        static void StartClock()
+        {
+            Program.start = DateTime.Now;
+        }
+        static void StopClock()
+        {
+            Program.end = DateTime.Now;
+        }
+        static string LivesArtsPaths (int x)
+        {
+            string[] dataSourcePath = { "hang0.txt", "hang1.txt", "hang2.txt", "hang3.txt", "hang4.txt" };
+            return dataSourcePath[x];
+        }
+        static string WinArtSourcePath()
+        {
+            string dataSourcePath = @"win_art.txt";
+            return dataSourcePath;
+        }
         static void Exit()
         {
             Console.WriteLine();
@@ -68,26 +157,52 @@ namespace Hangman
             //Console.WriteLine("Lives: " + Program.lifePoints);
             //Console.WriteLine("Correct answer: " + Program.capitalCity.ToLower());
             //Console.WriteLine("Users answer: " + Program.playersAnswer.ToLower());
-            if (Program.lifePoints == 0)
+            if (Program.lifePoints <= 0)
             // End of game if pleyer lost all life points.
             {
+                StopClock();
                 Console.WriteLine("\n                 Game Over");
                 Console.WriteLine("                 The answer was: " + Program.capitalCity + "\n");
                 //restarting guessing memory
                 Program.goodLetters = "";
                 Program.wrongLetters = "";
-                Console.WriteLine("                 Would you like to play again?     (Y/N)");
+                WallOfFame();
+                Console.WriteLine("\n                 Would you like to play again?     (Y/N)");
                 Menu();
             }
             // End of game if player guessed phrase.
             else if (Program.capitalCity.ToLower() == Program.playersAnswer.ToLower())
             {
-                Console.WriteLine("                 " + Program.playersAnswer.ToUpper() + " is correct! Well done!\n");
-                Console.WriteLine("                 You reached correct capital's name after " + Program.guessingCount + " rounds." );
+                StopClock();
+                TimeSpan ts = (Program.end - Program.start);
+                string winArtPath = WinArtSourcePath();
+                Console.WriteLine("\n" + File.ReadAllText(winArtPath));
+                Console.WriteLine("\n                 " + Program.playersAnswer.ToUpper() + " is correct! Well done!\n");
+                Console.WriteLine("                 You reached correct capital's name after " + Program.guessingCount + " rounds. It took you {0:00}:{1:00}.{2} minutes. \n", 
+                    ts.Minutes, ts.Seconds, ts.Milliseconds);
+                Console.Write("                 Please type your name to save your score.   >>>  ");
+                string name = Console.ReadLine();
+                DateTime localDate = DateTime.Now;
+                string path = ScoresPath();
+                StreamWriter sw;
+                if (!File.Exists(path))
+                {
+                    sw = File.CreateText(path);
+                }
+                else
+                {
+                    sw = new StreamWriter(path, true);
+                }
+                string dataToSave = String.Format("{0} | {1} | {2:00}:{3:00}.{4} | {5} | {6}", name, localDate, ts.Minutes, ts.Seconds, ts.Milliseconds, Program.guessingCount, Program.capitalCity);
+                sw.WriteLine(dataToSave);
+                sw.Close();
+                Console.WriteLine("\n\n Your score is: {0} | {1} | {2:00}:{3:00}.{4} | {5} | {6}", name, localDate, ts.Minutes, ts.Seconds, ts.Milliseconds, 
+                    Program.guessingCount, Program.capitalCity);
                 //restarting guessing memory
                 Program.goodLetters = "";
                 Program.wrongLetters = "";
-                Console.WriteLine("                 Would you like to play again?     (Y/N)");
+                WallOfFame();
+                Console.WriteLine("\n                 Would you like to play again?     (Y/N)");
                 Menu();
             }
             else
@@ -98,7 +213,7 @@ namespace Hangman
         static void ShowLife()
         {
             int lifeCount = 0;
-            int lifePoints = Program.lifePoints;
+            int lifePoints = Math.Max(0, Program.lifePoints);
             Console.OutputEncoding = System.Text.Encoding.Unicode;
             string lifeIcon = "\x2665";
             Console.Write("                 You have " + lifePoints + " life points: ");
@@ -110,7 +225,35 @@ namespace Hangman
             }
             Console.ResetColor();
             Console.WriteLine();
-            if(Program.wrongLetters != null)
+            //drawing hangman ASCII
+            if (Program.lifePoints <= 0)
+            {
+                string zeroPoints = LivesArtsPaths(0);
+                Console.WriteLine("\n" + File.ReadAllText(zeroPoints) + "\n");
+
+            }
+            else if (Program.lifePoints == 1)
+            {
+                string onePoint = LivesArtsPaths(1);
+                Console.WriteLine("\n" + File.ReadAllText(onePoint) + "\n");
+
+            }
+            else if (Program.lifePoints == 2)
+            {
+                string twoPoints = LivesArtsPaths(2);
+                Console.WriteLine("\n" + File.ReadAllText(twoPoints) + "\n");
+            }
+            else if (Program.lifePoints == 3)
+            {
+                string threePoints = LivesArtsPaths(3);
+                Console.WriteLine("\n" + File.ReadAllText(threePoints) + "\n");
+            }
+            else if (Program.lifePoints == 4)
+            {
+                string fourPoints = LivesArtsPaths(4);
+                Console.WriteLine("\n" + File.ReadAllText(fourPoints) + "\n");
+            }
+            if (Program.wrongLetters != null)
             {
                 LettersNotInWord();
             }
@@ -135,7 +278,7 @@ namespace Hangman
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("                 " + answer.ToUpper() + " is not correct. U lose 2 life points.\n");
+                Console.WriteLine("                 " + answer.ToUpper() + " is not correct. You lose 2 life points.\n");
                 Console.ResetColor();
                 Program.lifePoints = Program.lifePoints - 2;
                 Program.guessingCount++;
@@ -163,15 +306,20 @@ namespace Hangman
         {
             string correct = Program.capitalCity;
             Console.WriteLine("                 Type letter:");
-            string typing = Console.ReadLine();
+            string typing = Console.ReadLine().ToLower();
             char answer = typing[0];
-            if (correct.ToLower().Contains(answer))
+            if (Program.goodLetters.ToLower().Contains(answer) | Program.wrongLetters.ToLower().Contains(answer))
+            {
+                Console.WriteLine("                 You've already tried the letter \"" + answer.ToString().ToUpper() + "\" . Please choose a different letter.");
+                LetterOrPhrase();
+            }
+            else if (correct.ToLower().Contains(answer))
             {
                 Console.WriteLine("                 Good! " + answer.ToString().ToUpper() + " exist in this phrase.\n");
                 Program.goodLetters = Program.goodLetters + answer.ToString();
                 Program.guessingCount++;
-                IfGameEnds(); 
                 ShowLife();
+                IfGameEnds();
             }
             else
             {
@@ -253,6 +401,7 @@ namespace Hangman
         {
             Program.lifePoints = 5;
             Program.guessingCount = 0;
+            StartClock();
             SetData();
             //debug
             //Console.WriteLine(Program.capitalCity);
